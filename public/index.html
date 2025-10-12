@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jira Helper - Issue Management Tool</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <h1><i class="fas fa-ticket-alt"></i> Jira Helper</h1>
+                <div class="connection-status" id="connectionStatus">
+                    <i class="fas fa-circle"></i>
+                    <span>Not Connected</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="container">
+                <ul class="nav-list">
+                    <li><a href="#" class="nav-link active" data-section="search">
+                        <i class="fas fa-search"></i> Search & Edit
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-section="create">
+                        <i class="fas fa-plus"></i> Create Issues
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-section="verify">
+                        <i class="fas fa-check-circle"></i> Verify Issues
+                    </a></li>
+                    <li><a href="#" class="nav-link" data-section="settings">
+                        <i class="fas fa-cog"></i> Settings
+                    </a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Search & Edit Section -->
+                <section id="searchSection" class="section active">
+                    <h2>Search & Edit Issues</h2>
+                    
+                    <div class="search-form">
+                        <div class="form-group">
+                            <label for="jqlQuery">JQL Query:</label>
+                            <input type="text" id="jqlQuery" placeholder="e.g., project = PROJ AND status = 'To Do'" class="form-control">
+                            <small class="form-text">Enter a JQL query to search for issues</small>
+                        </div>
+                        <button id="searchBtn" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+
+                    <div id="searchResults" class="search-results" style="display: none;">
+                        <div class="results-header">
+                            <h3>Search Results</h3>
+                            <span id="resultsCount" class="results-count"></span>
+                        </div>
+                        <div id="issuesList" class="issues-list"></div>
+                    </div>
+                </section>
+
+                <!-- Create Issues Section -->
+                <section id="createSection" class="section">
+                    <h2>Create Issues</h2>
+                    
+                    <div class="create-tabs">
+                        <button class="tab-btn active" data-tab="single">Single Issue</button>
+                        <button class="tab-btn" data-tab="template">From Template</button>
+                        <button class="tab-btn" data-tab="bulk">Bulk Upload</button>
+                    </div>
+
+                    <!-- Single Issue Tab -->
+                    <div id="singleTab" class="tab-content active">
+                        <form id="singleIssueForm" class="issue-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="project">Project *</label>
+                                    <select id="project" class="form-control" required>
+                                        <option value="">Select Project</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="issueType">Issue Type *</label>
+                                    <select id="issueType" class="form-control" required>
+                                        <option value="">Select Issue Type</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="summary">Summary *</label>
+                                <input type="text" id="summary" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" class="form-control" rows="5"></textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="assignee">Assignee</label>
+                                    <input type="text" id="assignee" class="form-control" placeholder="Username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="priority">Priority</label>
+                                    <select id="priority" class="form-control">
+                                        <option value="">Select Priority</option>
+                                        <option value="Highest">Highest</option>
+                                        <option value="High">High</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Low">Low</option>
+                                        <option value="Lowest">Lowest</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="labels">Labels</label>
+                                    <input type="text" id="labels" class="form-control" placeholder="Comma-separated labels">
+                                </div>
+                                <div class="form-group">
+                                    <label for="dueDate">Due Date</label>
+                                    <input type="date" id="dueDate" class="form-control">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Create Issue
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Template Tab -->
+                    <div id="templateTab" class="tab-content">
+                        <div class="form-group">
+                            <label for="templateSelect">Select Template:</label>
+                            <select id="templateSelect" class="form-control">
+                                <option value="">Choose a template</option>
+                            </select>
+                        </div>
+                        
+                        <form id="templateIssueForm" class="issue-form" style="display: none;">
+                            <!-- Template form fields will be populated dynamically -->
+                        </form>
+                    </div>
+
+                    <!-- Bulk Upload Tab -->
+                    <div id="bulkTab" class="tab-content">
+                        <div class="bulk-upload">
+                            <div class="form-group">
+                                <label for="csvFile">CSV File:</label>
+                                <input type="file" id="csvFile" accept=".csv" class="form-control">
+                                <small class="form-text">
+                                    <a href="/api/create/csv-template" download>Download CSV template</a>
+                                </small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="bulkTemplate">Use Template (Optional):</label>
+                                <select id="bulkTemplate" class="form-control">
+                                    <option value="">No template</option>
+                                </select>
+                            </div>
+                            
+                            <button id="bulkUploadBtn" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Upload & Create Issues
+                            </button>
+                        </div>
+                        
+                        <div id="bulkResults" class="bulk-results" style="display: none;">
+                            <!-- Bulk upload results will be displayed here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Verify Issues Section -->
+                <section id="verifySection" class="section">
+                    <h2>Verify Issues</h2>
+                    
+                    <div class="verify-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="verifyIssueKey">Issue Key:</label>
+                                <input type="text" id="verifyIssueKey" class="form-control" placeholder="e.g., PROJ-123">
+                            </div>
+                            <div class="form-group">
+                                <label for="verificationScript">Verification Script:</label>
+                                <select id="verificationScript" class="form-control">
+                                    <option value="">Select Script</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="commentPrefix">Comment Prefix:</label>
+                            <input type="text" id="commentPrefix" class="form-control" value="[Verification]">
+                        </div>
+                        
+                        <div id="scriptParameters" class="script-parameters" style="display: none;">
+                            <!-- Script parameters will be populated dynamically -->
+                        </div>
+                        
+                        <button id="runVerificationBtn" class="btn btn-warning">
+                            <i class="fas fa-play"></i> Run Verification
+                        </button>
+                    </div>
+                    
+                    <div id="verificationResults" class="verification-results" style="display: none;">
+                        <!-- Verification results will be displayed here -->
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settingsSection" class="section">
+                    <h2>System Settings</h2>
+                    
+                    <div class="settings-tabs">
+                        <button class="tab-btn active" data-tab="connection">Connection</button>
+                        <button class="tab-btn" data-tab="metadata">Metadata</button>
+                        <button class="tab-btn" data-tab="templates">Templates</button>
+                    </div>
+
+                    <!-- Connection Tab -->
+                    <div id="connectionTab" class="tab-content active">
+                        <form id="settingsForm" class="settings-form">
+                            <div class="form-group">
+                                <label for="jiraUrl">Jira URL *</label>
+                                <input type="url" id="jiraUrl" class="form-control" placeholder="https://your-jira-instance.com" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="username">Username *</label>
+                                <input type="text" id="username" class="form-control" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="apiToken">API Token *</label>
+                                <input type="password" id="apiToken" class="form-control" required>
+                                <small class="form-text">Generate an API token from your Jira profile</small>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" id="testConnectionBtn" class="btn btn-secondary">
+                                    <i class="fas fa-plug"></i> Test Connection
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Save Settings
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Metadata Tab -->
+                    <div id="metadataTab" class="tab-content">
+                        <div class="metadata-section">
+                            <div class="section-header">
+                                <h3>Jira Metadata</h3>
+                                <button id="refreshMetadataBtn" class="btn btn-secondary">
+                                    <i class="fas fa-sync"></i> Refresh
+                                </button>
+                            </div>
+                            
+                            <div id="metadataContent" class="metadata-content">
+                                <!-- Metadata will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Templates Tab -->
+                    <div id="templatesTab" class="tab-content">
+                        <div class="templates-section">
+                            <div class="section-header">
+                                <h3>Issue Templates</h3>
+                                <button id="addTemplateBtn" class="btn btn-success">
+                                    <i class="fas fa-plus"></i> Add Template
+                                </button>
+                            </div>
+                            
+                            <div id="templatesContent" class="templates-content">
+                                <!-- Templates will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading...</p>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
